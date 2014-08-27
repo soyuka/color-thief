@@ -1,13 +1,11 @@
 {
   "name": "color-thief",
-  "version": "2.0.0",
-  "private": true,
   "author": {
     "name": "Lokesh Dhakar",
     "email": "lokesh.dhakar@gmail.com",
     "url": "http://lokeshdhakar.com/"
   },
-  "description": "Get the dominant color or color palette from an image.",
+  "description": "A script for grabbing the color palette from an image. Uses Javascript and the canvas tag to make it happen.",
   "keywords": [
     "color",
     "palette",
@@ -20,10 +18,10 @@
   "homepage": "http://lokeshdhakar.com/projects/color-thief/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lokesh/color-thief.git"
+    "url": "https://github.com/soyuka/color-thief.git"
   },
   "bugs": {
-    "url": "https://github.com/lokesh/color-thief/issues"
+    "url": "https://github.com/soyuka/color-thief/issues"
   },
   "licenses": [
     {
@@ -40,5 +38,13 @@
     "grunt-ftp-deploy": "^0.1.1",
     "grunt-contrib-uglify": "~0.4.0",
     "grunt-contrib-jshint": "~0.9.2"
+  },
+  "version": "2.1.0",
+  "main": "src/color-thief.js",
+  "scripts": {
+    "test": "nodeunit test/*-test.js --reporter minimal"
+  },
+  "dependencies": {
+    "canvas": "~1.1.2"
   }
 }

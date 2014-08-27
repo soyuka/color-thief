@@ -22,16 +22,42 @@
   It also simplifies some of the canvas context manipulation
   with a set of helper functions.
 */
+
+var iAmOnNode = false;
+if (typeof process !== 'undefined' && process.execPath && process.execPath.indexOf('node') !== -1) {
+    iAmOnNode = true;
+}
+if (iAmOnNode) {
+  var Canvas = require('canvas');
+  var Image = Canvas.Image;
+  var fs = require('fs');
+}
+
 var CanvasImage = function (image) {
-    this.canvas  = document.createElement('canvas');
+    // in node we use strings as path to an image
+    // whereas in the browser we use an image element
+    if (iAmOnNode) {
+      this.canvas = new Canvas()
+      var img = new Image;
+
+      if(image instanceof Buffer) {
+        img.src = image
+      }else{
+        img.src = fs.readFileSync(image);
+      }
+
+    } else {
+      this.canvas = document.createElement('canvas');
+      document.body.appendChild(this.canvas);
+      var img = image;
+    }
+    
     this.context = this.canvas.getContext('2d');
 
-    document.body.appendChild(this.canvas);
+    this.width  = this.canvas.width  = img.width;
+    this.height = this.canvas.height = img.height;
 
-    this.width  = this.canvas.width  = image.width;
-    this.height = this.canvas.height = image.height;
-
-    this.context.drawImage(image, 0, 0, this.width, this.height);
+    this.context.drawImage(img, 0, 0, this.width, this.height);
 };
 
 CanvasImage.prototype.clear = function () {
@@ -51,7 +77,9 @@ CanvasImage.prototype.getImageData = function () {
 };
 
 CanvasImage.prototype.removeCanvas = function () {
+  if (this.canvas.parentNode) {
     this.canvas.parentNode.removeChild(this.canvas);
+  }
 };
 
 
@@ -108,6 +136,23 @@ ColorThief.prototype.getPalette = function(sourceImage, colorCount, quality) {
     var imageData  = image.getImageData();
     var pixels     = imageData.data;
     var pixelCount = image.getPixelCount();
+    var palette    = this.getPaletteFromPixels(pixels, pixelCount, colorCount, quality);
+
+    // Clean up
+    image.removeCanvas();
+
+    return palette;
+};
+
+/*
+ * getPaletteFromPixels(pixels, pixelCount, colorCount, quality)
+ * returns array[ {r: num, g: num, b: num}, {r: num, g: num, b: num}, ...]
+ *
+ * Low-level function that takes pixels and computes color palette.
+ * Used by getPalette() and getColor()
+ *
+ */
+ColorThief.prototype.getPaletteFromPixels = function(pixels, pixelCount, colorCount, quality) {
 
     // Store the RGB values in an array format suitable for quantize function
     var pixelArray = [];
@@ -130,14 +175,8 @@ ColorThief.prototype.getPalette = function(sourceImage, colorCount, quality) {
     var cmap    = MMCQ.quantize(pixelArray, colorCount);
     var palette = cmap.palette();
 
-    // Clean up
-    image.removeCanvas();
-
     return palette;
-};
-
-
-
+}
 
 /*!
  * quantize.js Copyright 2008 Nick Rabinowitz.
@@ -270,7 +309,7 @@ var MMCQ = (function() {
                 for (i = vbox.r1; i <= vbox.r2; i++) {
                     for (j = vbox.g1; j <= vbox.g2; j++) {
                         for (k = vbox.b1; k <= vbox.b2; k++) {
-                             index = getColorIndex(i,j,k);
+                             var index = getColorIndex(i,j,k);
                              npix += (histo[index] || 0);
                         }
                     }
@@ -607,3 +646,8 @@ var MMCQ = (function() {
         quantize: quantize
     };
 })();
+
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ColorThief;
+}
