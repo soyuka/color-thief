@@ -1,0 +1,83 @@
+<html>
+<body>
+
+<form id="form">
+  <input id="url" type="text" value="http://upload.wikimedia.org/wikipedia/commons/d/db/Patern_test.jpg">
+  <button type="sumbit">Send</button>
+</form>
+
+<table id="table">
+  <tr><th>RGB</th><th>Color</th></tr>
+  <tr><td>Main color</td><td id="main-color"></td></tr>
+  <tr><td>Image</td><td id="image"></td></tr>
+</table>
+
+<script src="./src/color-thief.js"></script>
+<script>
+var ct = new ColorThief()
+
+var table = document.getElementById('table')
+
+document.getElementById('form').onsubmit = function(event) {
+  event.preventDefault()
+
+  var input = document.getElementById('url')
+
+  if(input.value) {
+
+    table.innerHTML = ''+
+      '<tr><th>RGB</th><th>Color</th></tr>'+
+      '<tr><td>Main color</td><td id="main-color"></td></tr>'+
+      '<tr><td>Image</td><td><img id="image"></td></tr>'
+
+    var img = document.getElementById('image')
+
+    /** AJAX call to skip CORS 
+    * credits to http://jsfiddle.net/Jan_Miksovsky/yy7Zs/ from http://stackoverflow.com/questions/20035615/using-raw-image-data-from-ajax-request-for-data-uri
+    **/
+
+    // Simulate a call to Dropbox or other service that can
+    // return an image as an ArrayBuffer.
+    var xhr = new XMLHttpRequest();
+
+    // Use JSFiddle logo as a sample image to avoid complicating
+    // this example with cross-domain issues.
+    xhr.open( "GET", input.value, true );
+
+    // Ask for the result as an ArrayBuffer.
+    xhr.responseType = "arraybuffer";
+
+    xhr.onload = function( e ) {
+        // Obtain a blob: URL for the image data.
+        var arrayBufferView = new Uint8Array( this.response );
+        var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+        var urlCreator = window.URL || window.webkitURL;
+        var imageUrl = urlCreator.createObjectURL( blob );
+        img.src = imageUrl;
+    };
+
+    xhr.send();
+
+    //when image finally loads get the palette
+    img.onload = function() {
+
+      var color = ct.getColor(img)
+      var palette = ct.getPalette(img) 
+
+      document.getElementById('main-color').style['background-color'] = 'rgb('+color.join(',')+')'
+
+      for(var i in palette) {
+        var rgb = palette[i].join(',')
+        var tr = document.createElement('tr')
+        tr.innerHTML = '<td>'+rgb+'</td><td style="background-color:rgb('+rgb+')"></td>'
+        table.appendChild(tr)
+      }
+
+    }
+
+  }
+
+}
+</script>
+</body>
+</html>
